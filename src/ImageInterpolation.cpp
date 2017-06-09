@@ -269,6 +269,33 @@ void bicubicInterpolate(uchar input[], int xSize, int ySize, uchar output[], int
 			}
 
 			y_new[i * newXSize + j] = cubicInterpolate(cubic_y, dv);
+
+			if (i < newYSize / 2 && j < newXSize / 2) {
+
+				char cubic_xU[4];
+				char cubic_yU[4];
+				char cubic_xV[4];
+				char cubic_yV[4];
+
+				for (int k = i_new - 1, yInd = 0; k < i_new + 3; k++, yInd++) {
+					cubic_xU[0] = u_old[k * xSize / 2 + j_new - 1];
+					cubic_xU[1] = u_old[k * xSize / 2 + j_new];
+					cubic_xU[2] = u_old[k * xSize / 2 + j_new + 1];
+					cubic_xU[3] = u_old[k * xSize / 2 + j_new + 2];
+
+					cubic_yU[yInd] = cubicInterpolate(cubic_xU, dh);
+
+					cubic_xV[0] = v_old[k * xSize / 2 + j_new - 1];
+					cubic_xV[1] = v_old[k * xSize / 2 + j_new ];
+					cubic_xV[2] = v_old[k * xSize / 2 + j_new + 1];
+					cubic_xV[3] = v_old[k * xSize / 2 + j_new + 2];
+				
+					cubic_yV[yInd] = cubicInterpolate(cubic_xV, dh);
+				}
+
+				u_new[i * newXSize / 2 + j] = cubicInterpolate(cubic_yU, dv);
+				v_new[i * newXSize / 2 + j] = cubicInterpolate(cubic_yV, dv);
+			}
 		}
 	}
 

@@ -11,6 +11,8 @@ void IDCT(const short input[], uchar output[], int N, double* DCTKernel);
    
 void extendBorders(uchar* input, int xSize, int ySize, int N, uchar** output, int* newXSize, int* newYSize);
 
+void extendBorders(char* input, int xSize, int ySize, int N, char** output, int* newXSize, int* newYSize);
+
 void cropImage(uchar* input, int xSize, int ySize, uchar* output, int newXSize, int newYSize);
 
 #endif // NXNDCT_H_

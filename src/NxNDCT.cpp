@@ -137,6 +137,33 @@ void extendBorders(uchar* input, int xSize, int ySize, int N, uchar** p_output, 
 	*p_output = output;
 }
 
+void extendBorders(char* input, int xSize, int ySize, int N, char** p_output, int* newXSize, int* newYSize)
+{
+	int deltaX = N - xSize%N;
+	int deltaY = N - ySize%N;
+
+	*newXSize = xSize + deltaX;
+	*newYSize = ySize + deltaY;
+
+	char* output = new char[(xSize + deltaX)*(ySize + deltaY)];
+
+	for (int i = 0; i<ySize; i++)
+	{
+		memcpy(&output[i*(xSize + deltaX)], &input[i*(xSize)], xSize);
+		if (deltaX != 0)
+		{
+			memset(&output[i*(xSize + deltaX) + xSize], output[i*(xSize + deltaX) + xSize - 1], deltaX);
+		}
+	}
+
+	for (int i = 0; i<deltaY; i++)
+	{
+		memcpy(&output[(i + ySize)*(xSize + deltaX)], &output[(ySize)*(xSize + deltaX)], xSize + deltaX);
+	}
+
+	*p_output = output;
+}
+
 void cropImage(uchar* input, int xSize, int ySize, uchar* output, int newXSize, int newYSize)
 {
 	for (int i=0; i<newYSize; i++)

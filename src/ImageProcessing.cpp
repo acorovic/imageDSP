@@ -94,11 +94,15 @@ void imageProcessingFun(const QString& progName, QImage* const outImgs, const QI
 		/* Input image data in RGB format can be obtained with inImgs->bits() */
 		/* Rotation angle in degrees is params[0]*/
 		/* Center of rotation coordinates are (XSIZE/2, YSIZE/2) */
+		double angleRad = (double) params[0] * 3.141592653589793 / 180;
 
 		/* TO DO: Construct output image object */
-
+		new (outImgs) QImage(X_SIZE, Y_SIZE, inImgs->format());
+		
 		/* TO DO: Perform image rotation */
-	
+
+		imageRotate(inImgs->bits(), X_SIZE, Y_SIZE, outImgs->bits(), X_SIZE / 2, Y_SIZE / 2, angleRad);
+		
 	}
 	else if (progName == "Rotation Bilinear") 
 	{

@@ -9,6 +9,8 @@ void imageProcessingFun(const QString& progName, QImage* const outImgs, const QI
 	int X_SIZE = inImgs->width();
 	int Y_SIZE = inImgs->height();
 
+	int X_SIZE_NEW;
+	int Y_SIZE_NEW;
 	
 	/* NOTE: Calculate output image resolution and construct output image object */
 
@@ -17,11 +19,24 @@ void imageProcessingFun(const QString& progName, QImage* const outImgs, const QI
 		/* Input image data in RGB format can be obtained with inImgs->bits() */
 		/* Vertical scale factor is params[0] */
 		/* Horizontal scale factor is params[1] */
+		X_SIZE_NEW = params[1] * X_SIZE;
+		Y_SIZE_NEW = params[0] * Y_SIZE;
+
+		if (X_SIZE_NEW % 4 != 0) {
+			X_SIZE_NEW += 4 - X_SIZE_NEW % 4;
+		}
+
+		if (Y_SIZE_NEW % 4 != 0) {
+			Y_SIZE_NEW += 4 - Y_SIZE_NEW % 4;
+		}
 
 		/* TO DO: Calculate output image resolution and construct output image object */
 
+		new (outImgs) QImage(X_SIZE_NEW, Y_SIZE_NEW, inImgs->format());
+
 		/* TO DO: Perform Sample and hold interpolation  */
 
+		sampleAndHold(inImgs->bits(), X_SIZE, Y_SIZE, outImgs->bits(), X_SIZE_NEW, Y_SIZE_NEW);
 
 	}
 	else if (progName == "Bilinear") 
@@ -29,10 +44,23 @@ void imageProcessingFun(const QString& progName, QImage* const outImgs, const QI
 		/* Input image data in RGB format can be obtained with inImgs->bits() */
 		/* Vertical scale factor is params[0] */
 		/* Horizontal scale factor is params[1] */
+		X_SIZE_NEW = params[1] * X_SIZE;
+		Y_SIZE_NEW = params[0] * Y_SIZE;
+
+		if (X_SIZE_NEW % 4 != 0) {
+			X_SIZE_NEW += 4 - X_SIZE_NEW % 4;
+		}
+
+		if (Y_SIZE_NEW % 4 != 0) {
+			Y_SIZE_NEW += 4 - Y_SIZE_NEW % 4;
+		}
 
 		/* TO DO: Calculate output image resolution and construct output image object */
 
+		new (outImgs) QImage(X_SIZE_NEW, Y_SIZE_NEW, inImgs->format());
+
 		/* TO DO: Perform Bilinear interpolation  */
+		bilinearInterpolate(inImgs->bits(), X_SIZE, Y_SIZE, outImgs->bits(), X_SIZE_NEW, Y_SIZE_NEW);
 	}
 	else if (progName == "Bicubic")
 	{
@@ -41,12 +69,16 @@ void imageProcessingFun(const QString& progName, QImage* const outImgs, const QI
 		/* Vertical scale factor is params[0] */
 		/* Horizontal scale factor is params[1] */
 
+		X_SIZE_NEW = params[1] * X_SIZE;
+		Y_SIZE_NEW = params[0] * Y_SIZE;
 
-		int X_SIZE_NEW = X_SIZE * params[1];
-		int Y_SIZE_NEW = Y_SIZE * params[0];
+		if (X_SIZE_NEW % 4 != 0) {
+			X_SIZE_NEW += 4 - X_SIZE_NEW % 4;
+		}
 
-		X_SIZE_NEW += X_SIZE_NEW % 4;
-		Y_SIZE_NEW += Y_SIZE_NEW % 4;
+		if (Y_SIZE_NEW % 4 != 0) {
+			Y_SIZE_NEW += 4 - Y_SIZE_NEW % 4;
+		}
 
 		/* TO DO: Calculate output image resolution and construct output image object */
 

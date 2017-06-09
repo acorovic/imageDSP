@@ -4,41 +4,160 @@
 #include "NxNDCT.h"
 
 
-/*void extendBorders(uchar* input, int xSize, int ySize, int N, uchar** p_output, int* newXSize, int* newYSize)
-{
-	int deltaX = N - xSize%N;
-	int deltaY = N - ySize%N;
-
-	*newXSize = xSize + deltaX;
-	*newYSize = ySize + deltaY;
-
-	uchar* output = new uchar[(xSize + deltaX)*(ySize + deltaY)];
-
-	for (int i = 0; i<ySize; i++)
-	{
-		memcpy(&output[i*(xSize + deltaX)], &input[i*(xSize)], xSize);
-		if (deltaX != 0)
-		{
-			memset(&output[i*(xSize + deltaX) + xSize], output[i*(xSize + deltaX) + xSize - 1], deltaX);
-		}
-	}
-
-	for (int i = 0; i<deltaY; i++)
-	{
-		memcpy(&output[(i + ySize)*(xSize + deltaX)], &output[(ySize)*(xSize + deltaX)], xSize + deltaX);
-	}
-
-	*p_output = output;
-}*/
 
 void sampleAndHold(const uchar input[], int xSize, int ySize, uchar output[], int newXSize, int newYSize)
 {
 	/* TO DO */
+	uchar* y_old = (uchar*)malloc(xSize * ySize);
+	char* u_old = (char*)malloc(xSize * ySize / 4);
+	char* v_old = (char*)malloc(xSize * ySize / 4);
+
+	uchar* y_new = (uchar*)malloc(newXSize * newYSize);
+	char* u_new = (char*)malloc(newXSize * newYSize / 4);
+	char* v_new = (char*)malloc(newXSize * newYSize / 4);
+
+	double Fh = (double)newXSize / xSize;
+	double Fv = (double)newYSize / ySize;
+
+	RGBtoYUV420(input, xSize, ySize, y_old, u_old, v_old);
+
+	int i_new = 0;
+	int j_new = 0;
+
+	for (int i = 0; i < newYSize; i++) {
+		for (int j = 0; j < newXSize; j++) {
+			i_new = (i - 1) / Fv;
+			j_new = (j - 1) / Fh;
+
+			if (i_new < newYSize - 1) {
+				i_new += 1;
+			}
+
+			if (j_new < newXSize - 1) {
+				j_new += 1;
+			}
+
+			y_new[i*newXSize + j] = y_old[i_new * xSize + j_new];
+		}
+	}
+
+	for (int i = 0; i < newYSize / 2; i++) {
+		for (int j = 0; j < newXSize / 2; j++) {
+			i_new = (i - 1) / Fv;
+			j_new = (j - 1) / Fh;
+
+			if (i_new < newYSize - 1) {
+				i_new += 1;
+			}
+
+			if (j_new < newXSize - 1) {
+				j_new += 1;
+			}
+
+			u_new[i*newXSize / 2 + j] = u_old[i_new * xSize / 2 + j_new];
+			v_new[i*newXSize / 2 + j] = v_old[i_new * xSize / 2 + j_new];
+		}
+	}
+
+	YUV420toRGB(y_new, u_new, v_new, newXSize, newYSize, output);
+
+	free(y_old);
+	free(u_old);
+	free(v_old);
+	free(y_new);
+	free(u_new);
+	free(v_new);
+
 }
 
 void bilinearInterpolate(const uchar input[], int xSize, int ySize, uchar output[], int newXSize, int newYSize)
 {
 	/* TO DO */
+	uchar* y_old = (uchar*)malloc(xSize * ySize);
+	char* u_old = (char*)malloc(xSize * ySize / 4);
+	char* v_old = (char*)malloc(xSize * ySize / 4);
+
+	uchar* y_new = (uchar*)malloc(newXSize * newYSize);
+	char* u_new = (char*)malloc(newXSize * newYSize / 4);
+	char* v_new = (char*)malloc(newXSize * newYSize / 4);
+
+	double sh = (double)newXSize / xSize;
+	double sv = (double)newYSize / ySize;
+
+	RGBtoYUV420(input, xSize, ySize, y_old, u_old, v_old);
+
+	int i_new = 0;
+	int j_new = 0;
+	int i_new_2 = 0;
+	int j_new_2 = 0;
+
+	for (int i = 0; i < newYSize; i++) {
+		for (int j = 0; j < newXSize; j++) {
+			double a = i / sv - floor(i / sv);
+			double b = j / sh - floor(j / sh);
+
+			i_new = i / sv;
+			j_new = j / sh;
+
+			i_new_2 = i_new;
+			j_new_2 = j_new;
+
+			if (i_new_2 < ySize - 1) {
+				i_new_2 += 1;
+			}
+
+			if (j_new_2 < xSize - 1) {
+				j_new_2 += 1;
+			}
+
+			y_new[i*newXSize + j] = (1 - a)*(1 - b)*y_old[i_new * xSize + j_new]
+				+ (1 - a)*b*y_old[i_new * xSize + j_new_2]
+				+ a*(1 - b)*y_old[i_new_2* xSize + j_new]
+				+ a*b*y_old[i_new_2*xSize + j_new_2];
+		}
+	}
+
+	for (int i = 0; i < newYSize / 2; i++) {
+		for (int j = 0; j < newXSize / 2; j++) {
+			double a = i / sv - floor(i / sv);
+			double b = j / sh - floor(j / sh);
+
+			i_new = i / sv;
+			j_new = j / sh;
+
+			i_new_2 = i_new;
+			j_new_2 = j_new;
+
+			if (i_new_2 < ySize / 2 - 1) {
+				i_new_2 += 1;
+			}
+
+			if (j_new_2 < xSize / 2 - 1) {
+				j_new_2 += 1;
+			}
+
+			u_new[i*newXSize / 2 + j] = (1 - a)*(1 - b)*u_old[i_new * xSize / 2 + j_new]
+				+ (1 - a)*b*u_old[i_new * xSize / 2 + j_new_2]
+				+ a*(1 - b)*u_old[i_new_2* xSize / 2 + j_new]
+				+ a*b*u_old[i_new_2*xSize / 2 + j_new_2];
+
+			v_new[i*newXSize / 2 + j] = (1 - a)*(1 - b)*v_old[i_new * xSize / 2 + j_new]
+				+ (1 - a)*b*v_old[i_new * xSize / 2 + j_new_2]
+				+ a*(1 - b)*v_old[i_new_2* xSize / 2 + j_new]
+				+ a*b*v_old[i_new_2*xSize / 2 + j_new_2];
+		}
+	}
+
+
+	YUV420toRGB(y_new, u_new, v_new, newXSize, newYSize, output);
+
+	free(y_old);
+	free(u_old);
+	free(v_old);
+	free(y_new);
+	free(u_new);
+	free(v_new);
+
 }
 
 double wHelperFcn(double d) {
@@ -114,7 +233,7 @@ void bicubicInterpolate(uchar input[], int xSize, int ySize, uchar output[], int
 	int extendedXsizeUV;
 	int extendedYsizeUV;
 
-	//extendBorders(y_old, xSize, ySize, 2, &y_old, &extendedXsizeY, &extendedYsizeY);
+	extendBorders(y_old, xSize, ySize, 2, &y_old, &extendedXsizeY, &extendedYsizeY);
 	extendBorders(u_old, xSize / 2, ySize / 2, 2, &u_old, &extendedXsizeUV, &extendedYsizeUV);
 	extendBorders(v_old, xSize / 2, ySize / 2, 2, &v_old, &extendedXsizeUV, &extendedYsizeUV);
 	

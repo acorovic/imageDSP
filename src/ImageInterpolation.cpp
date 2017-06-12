@@ -2,6 +2,7 @@
 #include "ColorSpaces.h"
 #include <math.h>
 #include "NxNDCT.h"
+#include "ImageFilter.h"
 
 
 
@@ -228,23 +229,22 @@ void bicubicInterpolate(uchar input[], int xSize, int ySize, uchar output[], int
 	char* u_old = new char[xSize * ySize / 4];
 	char* v_old = new char[xSize * ySize / 4];
 
-	int extendedXsizeY;
-	int extendedYsizeY;
-	int extendedXsizeUV;
-	int extendedYsizeUV;
+	uchar *y_ext = new uchar[(xSize + 4) * (ySize + 4)]();
+	char *u_ext = new char[(xSize + 16) * (ySize + 16) / 4]();
+	char *v_ext = new char[(xSize + 16) * (ySize + 16) / 4]();
 
-	extendBorders(y_old, xSize, ySize, 2, &y_old, &extendedXsizeY, &extendedYsizeY);
-	extendBorders(u_old, xSize / 2, ySize / 2, 2, &u_old, &extendedXsizeUV, &extendedYsizeUV);
-	extendBorders(v_old, xSize / 2, ySize / 2, 2, &v_old, &extendedXsizeUV, &extendedYsizeUV);
-	
+	RGBtoYUV420(input, xSize, ySize, y_old, u_old, v_old);
+
+	extendBorders(y_old, xSize, ySize, y_ext, 2);
+	extendBorders(u_old, xSize / 2, ySize / 2, u_ext, 2);
+	extendBorders(v_old, xSize / 2, ySize / 2, v_ext, 2);
+
 	uchar* y_new = new uchar[newXSize * newYSize];
 	char* u_new = new char[newXSize * newYSize / 4];
 	char* v_new = new char[newXSize * newYSize / 4];
 
 	double sh = (double)newXSize / xSize;
 	double sv = (double)newYSize / ySize;
-
-	RGBtoYUV420(input, xSize, ySize, y_old, u_old, v_old);
 
 	for (int i = 0; i < newYSize; i++) {
 		for (int j = 0; j < newXSize; j++) {
@@ -260,10 +260,10 @@ void bicubicInterpolate(uchar input[], int xSize, int ySize, uchar output[], int
 			int yInd = 0;
 
 			for (int k = i_new - 1; k < i_new + 3; k++, yInd++) {
-				cubic_x[0] = y_old[k * xSize + j_new - 1];
-				cubic_x[1] = y_old[k * xSize + j_new];
-				cubic_x[2] = y_old[k * xSize + j_new + 1];
-				cubic_x[3] = y_old[k * xSize + j_new + 2];
+				cubic_x[0] = y_ext[k * (xSize+4) + j_new - 1];
+				cubic_x[1] = y_ext[k * (xSize+4) + j_new];
+				cubic_x[2] = y_ext[k * (xSize+4) + j_new + 1];
+				cubic_x[3] = y_ext[k * (xSize+4) + j_new + 2];
 				
 				cubic_y[yInd] = cubicInterpolate(cubic_x, dh);
 			}
@@ -278,17 +278,17 @@ void bicubicInterpolate(uchar input[], int xSize, int ySize, uchar output[], int
 				char cubic_yV[4];
 
 				for (int k = i_new - 1, yInd = 0; k < i_new + 3; k++, yInd++) {
-					cubic_xU[0] = u_old[k * xSize / 2 + j_new - 1];
-					cubic_xU[1] = u_old[k * xSize / 2 + j_new];
-					cubic_xU[2] = u_old[k * xSize / 2 + j_new + 1];
-					cubic_xU[3] = u_old[k * xSize / 2 + j_new + 2];
+					cubic_xU[0] = u_ext[k * (xSize / 2 +4) + j_new - 1];
+					cubic_xU[1] = u_ext[k * (xSize / 2 +4) + j_new];
+					cubic_xU[2] = u_ext[k * (xSize / 2 +4) + j_new + 1];
+					cubic_xU[3] = u_ext[k * (xSize / 2 +4) + j_new + 2];
 
 					cubic_yU[yInd] = cubicInterpolate(cubic_xU, dh);
 
-					cubic_xV[0] = v_old[k * xSize / 2 + j_new - 1];
-					cubic_xV[1] = v_old[k * xSize / 2 + j_new ];
-					cubic_xV[2] = v_old[k * xSize / 2 + j_new + 1];
-					cubic_xV[3] = v_old[k * xSize / 2 + j_new + 2];
+					cubic_xV[0] = v_ext[k * (xSize / 2 +4) + j_new - 1];
+					cubic_xV[1] = v_ext[k * (xSize / 2 +4) + j_new ];
+					cubic_xV[2] = v_ext[k * (xSize / 2 +4) + j_new + 1];
+					cubic_xV[3] = v_ext[k * (xSize / 2 +4) + j_new + 2];
 				
 					cubic_yV[yInd] = cubicInterpolate(cubic_xV, dh);
 				}
@@ -309,6 +309,9 @@ void bicubicInterpolate(uchar input[], int xSize, int ySize, uchar output[], int
 	delete[] y_new;
 	delete[] u_new;
 	delete[] v_new;
+	delete[] y_ext;
+	delete[] u_ext;
+	delete[] v_ext;
 }
 
 void imageRotateBilinear(const uchar input[], int xSize, int ySize, uchar output[], int m, int n, double angle)

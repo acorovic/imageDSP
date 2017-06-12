@@ -5,6 +5,8 @@
 void convolve2D (uchar Y_buff[], int xSize, int ySize, double filterCoeff, int N);
 
 void extendBorders(uchar input[], int xSize, int ySize, uchar output[], int delta);
+
+void extendBorders(char input[], int xSize, int ySize, char output[], int delta);
 	
 void performNFFilter (uchar input[], int xSize, int ySize);
 

@@ -311,13 +311,123 @@ void bicubicInterpolate(uchar input[], int xSize, int ySize, uchar output[], int
 	delete[] v_new;
 }
 
-void imageRotate(const uchar input[], int xSize, int ySize, uchar output[], int m, int n, double angle)
+void imageRotateBilinear(const uchar input[], int xSize, int ySize, uchar output[], int m, int n, double angle)
 {
 	/* TO DO */
 
+	double x_new_calc;
+	double y_new_calc;
+	
+	uchar* y_old = new uchar[xSize * ySize];
+	char* u_old = new char[xSize * ySize / 4];
+	char* v_old = new char[xSize * ySize / 4];
+
+	uchar* y_new = new uchar[xSize * ySize];
+	char* u_new = new char[xSize * ySize / 4];
+	char* v_new = new char[xSize * ySize / 4];
+
+	RGBtoYUV420(input, xSize, ySize, y_old, u_old, v_old);
+
+	for (int i = 0; i < ySize; i++) {
+		for (int j = 0; j < xSize; j++) {
+			y_new_calc = (j * cos(angle) - i * sin(angle) - m * cos(angle) + n*sin(angle) + m);
+			x_new_calc = (i * cos(angle) + j * sin(angle) - m * sin(angle) - n*cos(angle) + n);
+
+			int x_pos_new = floor(x_new_calc);
+			int y_pos_new = floor(y_new_calc);
+
+			int y_pos_new_2;
+			int x_pos_new_2;
+
+			if (x_pos_new == ySize - 1) {
+				x_pos_new_2 = x_pos_new;
+			}
+			else {
+				x_pos_new_2 = x_pos_new + 1;
+			}
+
+			if (y_pos_new == xSize - 1) {
+				y_pos_new_2 = y_pos_new;
+			}
+			else {
+				y_pos_new_2 = y_pos_new + 1;
+			}
+			
+			double a = x_new_calc - x_pos_new;
+			double b = y_new_calc - y_pos_new;
+
+			if (x_pos_new < 0 || x_pos_new > xSize - 1 || y_pos_new < 0 || y_pos_new > ySize - 1) {
+				y_new[i * xSize + j] = 0;
+			}
+			else {
+				y_new[i * xSize + j] = (1 - a) * (1 - b) * y_old[x_pos_new * xSize + y_pos_new]
+					+ (1 - a) * b * y_old[x_pos_new * xSize + y_pos_new_2]
+					+ a * (1 - b) * y_old[x_pos_new_2 * xSize + y_pos_new]
+					+ a * b * y_old[x_pos_new_2 * xSize + y_pos_new_2];
+			}
+		
+			if (i < ySize / 2 && j < xSize/2) {
+				y_new_calc = round(j * cos(angle) - i * sin(angle) - m/2 * cos(angle) + n/2*sin(angle) + m/2);
+				x_new_calc = round(i * cos(angle) + j * sin(angle) - m/2 * sin(angle) - n/2*cos(angle) + n/2);
+				
+				x_pos_new = floor(x_new_calc);
+				y_pos_new = floor(y_new_calc);
+
+				if (x_pos_new == ySize/2 - 1) {
+					x_pos_new_2 = x_pos_new;
+				}
+				else {
+					x_pos_new_2 = x_pos_new + 1;
+				}
+
+				if (y_pos_new == xSize/2 - 1) {
+					y_pos_new_2 = y_pos_new;
+				}
+				else {
+					y_pos_new_2 = y_pos_new + 1;
+				}
+
+				a = x_pos_new - x_pos_new;
+				b = y_pos_new - y_pos_new;
+				
+				if (x_pos_new < 0 || x_pos_new > xSize/2 - 1 || y_pos_new < 0 || y_pos_new > ySize/2 - 1) {
+					u_new[i * xSize/2 + j] = 0;
+					v_new[i * xSize/2 + j] = 0;
+				}
+				else {
+					
+					u_new[i * xSize / 2 + j] = (1 - a) * (1 - b) * u_old[x_pos_new * xSize/2 + y_pos_new]
+											   + (1 - a) * b * u_old[x_pos_new * xSize/2 + y_pos_new_2]
+											   + a * (1 - b) * u_old[x_pos_new_2 * xSize/2 + y_pos_new]
+											   + a * b * u_old[x_pos_new_2 * xSize/2 + y_pos_new_2];
+					
+					v_new[i * xSize / 2 + j] = (1 - a) * (1 - b) * v_old[x_pos_new * xSize / 2 + y_pos_new]
+											   + (1 - a) * b * v_old[x_pos_new * xSize / 2 + y_pos_new_2]
+											   + a * (1 - b) * v_old[x_pos_new_2 * xSize / 2 + y_pos_new]
+											   + a * b * v_old[x_pos_new_2 * xSize / 2 + y_pos_new_2];
+				}
+			}
+
+
+		}
+	}
+
+	YUV420toRGB(y_new, u_new, v_new, xSize, ySize, output);
+
+	delete[] y_old;
+	delete[] u_old;
+	delete[] v_old;
+	delete[] y_new;
+	delete[] u_new;
+	delete[] v_new;
+}
+
+void imageRotate(const uchar input[], int xSize, int ySize, uchar output[], int m, int n, double angle)
+{
+	/* TO DO */
 	int x_pos_new;
 	int y_pos_new;
-	
+
 	uchar* y_old = new uchar[xSize * ySize];
 	char* u_old = new char[xSize * ySize / 4];
 	char* v_old = new char[xSize * ySize / 4];
@@ -339,13 +449,13 @@ void imageRotate(const uchar input[], int xSize, int ySize, uchar output[], int 
 			else {
 				y_new[i * xSize + j] = y_old[x_pos_new * xSize + y_pos_new];
 			}
-		
-			if (i < ySize / 2 && j < xSize/2) {
-				y_pos_new = round(j * cos(angle) - i * sin(angle) - m/2 * cos(angle) + n/2*sin(angle) + m/2);
-				x_pos_new = round(i * cos(angle) + j * sin(angle) - m/2 * sin(angle) - n/2*cos(angle) + n/2);
-				if (x_pos_new < 0 || x_pos_new > xSize/2 - 1 || y_pos_new < 0 || y_pos_new > ySize/2 - 1) {
-					u_new[i * xSize/2 + j] = 0;
-					v_new[i * xSize/2 + j] = 0;
+
+			if (i < ySize / 2 && j < xSize / 2) {
+				y_pos_new = round(j * cos(angle) - i * sin(angle) - m / 2 * cos(angle) + n / 2 * sin(angle) + m / 2);
+				x_pos_new = round(i * cos(angle) + j * sin(angle) - m / 2 * sin(angle) - n / 2 * cos(angle) + n / 2);
+				if (x_pos_new < 0 || x_pos_new > xSize / 2 - 1 || y_pos_new < 0 || y_pos_new > ySize / 2 - 1) {
+					u_new[i * xSize / 2 + j] = 0;
+					v_new[i * xSize / 2 + j] = 0;
 				}
 				else {
 					u_new[i * xSize / 2 + j] = u_old[x_pos_new * xSize / 2 + y_pos_new];
@@ -365,9 +475,4 @@ void imageRotate(const uchar input[], int xSize, int ySize, uchar output[], int 
 	delete[] y_new;
 	delete[] u_new;
 	delete[] v_new;
-}
-
-void imageRotateBilinear(const uchar input[], int xSize, int ySize, uchar output[], int m, int n, double angle)
-{
-	/* TO DO */
 }

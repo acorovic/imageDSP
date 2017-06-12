@@ -356,7 +356,7 @@ void imageRotateBilinear(const uchar input[], int xSize, int ySize, uchar output
 			double a = x_new_calc - x_pos_new;
 			double b = y_new_calc - y_pos_new;
 
-			if (x_pos_new < 0 || x_pos_new > xSize - 1 || y_pos_new < 0 || y_pos_new > ySize - 1) {
+			if (x_pos_new < 0 || x_pos_new > ySize - 1 || y_pos_new < 0 || y_pos_new > xSize - 1) {
 				y_new[i * xSize + j] = 0;
 			}
 			else {
@@ -390,7 +390,7 @@ void imageRotateBilinear(const uchar input[], int xSize, int ySize, uchar output
 				a = x_pos_new - x_pos_new;
 				b = y_pos_new - y_pos_new;
 				
-				if (x_pos_new < 0 || x_pos_new > xSize/2 - 1 || y_pos_new < 0 || y_pos_new > ySize/2 - 1) {
+				if (x_pos_new < 0 || x_pos_new > ySize/2 - 1 || y_pos_new < 0 || y_pos_new > xSize/2 - 1) {
 					u_new[i * xSize/2 + j] = 0;
 					v_new[i * xSize/2 + j] = 0;
 				}
@@ -443,17 +443,17 @@ void imageRotate(const uchar input[], int xSize, int ySize, uchar output[], int 
 			y_pos_new = round(j * cos(angle) - i * sin(angle) - m * cos(angle) + n*sin(angle) + m);
 			x_pos_new = round(i * cos(angle) + j * sin(angle) - m * sin(angle) - n*cos(angle) + n);
 
-			if (x_pos_new < 0 || x_pos_new > xSize - 1 || y_pos_new < 0 || y_pos_new > ySize - 1) {
+			if (x_pos_new < 0 || x_pos_new > ySize - 1 || y_pos_new < 0 || y_pos_new > xSize - 1) {
 				y_new[i * xSize + j] = 0;
 			}
 			else {
 				y_new[i * xSize + j] = y_old[x_pos_new * xSize + y_pos_new];
 			}
 
-			if (i < ySize / 2 && j < xSize / 2) {
+			if ((i < ySize / 2) && (j < xSize / 2)) {
 				y_pos_new = round(j * cos(angle) - i * sin(angle) - m / 2 * cos(angle) + n / 2 * sin(angle) + m / 2);
 				x_pos_new = round(i * cos(angle) + j * sin(angle) - m / 2 * sin(angle) - n / 2 * cos(angle) + n / 2);
-				if (x_pos_new < 0 || x_pos_new > xSize / 2 - 1 || y_pos_new < 0 || y_pos_new > ySize / 2 - 1) {
+				if (x_pos_new < 0 || x_pos_new > ySize / 2 - 1 || y_pos_new < 0 || y_pos_new > xSize / 2 - 1) {
 					u_new[i * xSize / 2 + j] = 0;
 					v_new[i * xSize / 2 + j] = 0;
 				}

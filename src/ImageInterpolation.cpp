@@ -30,11 +30,11 @@ void sampleAndHold(const uchar input[], int xSize, int ySize, uchar output[], in
 			i_new = (i - 1) / Fv;
 			j_new = (j - 1) / Fh;
 
-			if (i_new < newYSize - 1) {
+			if (i_new < ySize - 1) {
 				i_new += 1;
 			}
 
-			if (j_new < newXSize - 1) {
+			if (j_new < xSize - 1) {
 				j_new += 1;
 			}
 
@@ -47,11 +47,15 @@ void sampleAndHold(const uchar input[], int xSize, int ySize, uchar output[], in
 			i_new = (i - 1) / Fv;
 			j_new = (j - 1) / Fh;
 
-			if (i_new < newYSize - 1) {
+			if (i_new < ySize/2 - 1) {
 				i_new += 1;
 			}
+			else
+			{
+				printf("Hello world");
+			}
 
-			if (j_new < newXSize - 1) {
+			if (j_new < xSize/2 - 1) {
 				j_new += 1;
 			}
 
